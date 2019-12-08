@@ -1,7 +1,7 @@
 import sys
 
 import matplotlib.pyplot as plt
-from matplotlib.path import Path
+import matplotlib.path as mpPath
 import matplotlib.patches as patches
 import numpy as np
 import matplotlib.lines as mlines
@@ -30,12 +30,12 @@ def createPolygonPatch(polygon, color):
         xy = polygon[v]
         verts.append((xy[0], xy[1]))
         if v == 0:
-            codes.append(Path.MOVETO)
+            codes.append(mpPath.Path.MOVETO)
         else:
-            codes.append(Path.LINETO)
+            codes.append(mpPath.Path.LINETO)
     verts.append(verts[0])
-    codes.append(Path.CLOSEPOLY)
-    path = Path(verts, codes)
+    codes.append(mpPath.Path.CLOSEPOLY)
+    path = mpPath.Path(verts, codes)
     patch = patches.PathPatch(path, facecolor=color, lw=1)
 
     return patch
@@ -211,6 +211,8 @@ recursive dfs helper
 def dfs(tree, start, goal, visited):
     if start == goal:
         return [goal]
+    if tree[start] == []:
+    	return False
     for k in [i for i in tree[start] if visited[i] == 0]:
         visited[k] = 1
         path = dfs(tree, k, goal, visited)
