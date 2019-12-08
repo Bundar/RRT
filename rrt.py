@@ -384,7 +384,7 @@ def main(filename, x1, y1, x2, y2, display=''):
     if display == 'display3':
         robotStart = [(x + x1, y + y1) for x, y in robot]
         robotGoal = [(x + x2, y + y2) for x, y in robot]
-        isCollisionFree(robotGoal, [0,0], obstacles)
+        isCollisionFree(robot, [0,0], obstacles)
         displayRRTandPath(points, adjListMap, path, robotStart, robotGoal, obstacles) 
 
 
