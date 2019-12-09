@@ -391,7 +391,6 @@ def isCollisionFree(robot, point, obstacles):
 '''
 The full RRT algorithm
 '''
-
 def RRT(robot, obstacles, startPoint, goalPoint):
     points = dict()
     points2 = dict()
@@ -416,13 +415,16 @@ def RRT(robot, obstacles, startPoint, goalPoint):
         if (tempPath.contains_point((x, y)) == False):
             points[len(points) + 1] = (x, y)
     # goal = len(points)+1
+    # points[goal] = goalPoint
     points2, tree = growSimpleRRTwithObstacles(points, obstacles)
 
     if dictsearch(goalPoint,points2) == 0:
         path = []
     else:
         path = basicSearch(tree, 1, dictsearch(goalPoint, points2))
-    while path == []:
+    if dictsearch(goalPoint,points) == 0:
+        points[len(points) + 1] = goalPoint
+    while path == [] and len(points )<100:
         for init in range(0, 10):
             x = np.random.ranf() * 10  # we are given that the area is from 0 to 10 in a box
             y = np.random.ranf() * 10
@@ -443,9 +445,21 @@ def RRT(robot, obstacles, startPoint, goalPoint):
         points2, tree = growSimpleRRTwithObstacles(points, obstacles)
         if dictsearch(goalPoint, points2)==0:
             path = []
+
         else:
-            path = basicSearch(tree, 1, dictsearch(goalPoint, points2))
-    # Your code goes here.
+            pass
+            path = basicSearch(tree, 1, 2)
+        points[len(points) + 1] = goalPoint
+    points2, tree = growSimpleRRTwithObstacles(points, obstacles)
+    path = basicSearch(tree, 1, 2)
+
+    return points2, tree, path
+
+def dictsearch(val, dict):
+    for items in dict:
+        if val ==dict[items]:
+            return items
+    return 0
 
     return points, tree, path
 def ccw(A,B,C):
