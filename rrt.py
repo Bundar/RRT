@@ -1,5 +1,5 @@
 import sys
-
+import random
 import matplotlib.pyplot as plt
 import matplotlib.path as mpPath
 import matplotlib.patches as patches
@@ -232,14 +232,15 @@ def growSimpleRRTwithObstacles(points, obstacles):
 
     print("Added Pts: " + str(newPoints))
     print("\nUnaddedPts: " + str(unaddedPoints))
-    for p in unaddedPoints:
-        addPointToTree(p,newPoints, adjListMap,obstacles)
+    while len(unaddedPoints) > 0:
+        (newPoints, adjListMap) =addPointToTree(random.choice(unaddedPoints),newPoints, adjListMap,obstacles)
 
     return newPoints, adjListMap
 '''
 expand tree function to add point to the tree if possible
 '''
 def addPointToTree(point, newPoints, adjListMap, obstacles):
+    print("Adding pt: " + str(point))
     pointCount = len(adjListMap)
     unaddedPoints = []
 
@@ -287,6 +288,8 @@ def addPointToTree(point, newPoints, adjListMap, obstacles):
                 print("")
     else:
         unaddedPoints.append(point)
+
+    return (newPoints, adjListMap)
 
 '''
 returns the key value of a given point
@@ -395,7 +398,7 @@ def RRT(robot, obstacles, startPoint, goalPoint):
     points[1] = startPoint
     points[2] =  goalPoint	
     modobstacles = obstacles[0:len(obstacles)-2]#so as to not include the surrounding area in point calc
-    for init in range(0,20):
+    for init in range(0,40):
         x = np.random.ranf()*10 #we are given that the area is from 0 to 10 in a box
         y = np.random.ranf()*10
         for obstacle in modobstacles:
