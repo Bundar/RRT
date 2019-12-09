@@ -159,6 +159,69 @@ def growSimpleRRT(points):
                         print("")
     return newPoints, adjListMap
 '''
+Grow a simple RRT with edge detection with obstacles
+'''
+def growSimpleRRTwithObstacles(points, obstacles):
+    newPoints = {}
+    adjListMap = {}
+    
+    pointCount = 1
+
+    for key in points:
+        newP = points[key]
+        if key == 1:
+            newPoints[1] = points[1]
+            adjListMap[1] = []
+        else:
+            minDist = float('inf')
+            closestPoint = [] ## [x, y]
+            closestEdge = [] ## [p, q]
+            for sourceNodeKey in adjListMap:
+                p = newPoints[sourceNodeKey]
+                for destNodeKey in adjListMap[sourceNodeKey]:
+                    q = newPoints[destNodeKey]
+                    (qN, dist) = findNearestPointOnEdge(p, q, newP)
+                    if dist < minDist:
+                    	edge = [newP, qN]
+                    	if isCollisionFree(edge, newP, obstacles):
+                            minDist = dist
+                            closestPoint = qN
+                            closestEdge = [p, q]
+
+            if minDist == float('inf'):
+                pointCount = pointCount + 1 
+                newPoints[key] =  points[key]
+                adjListMap[key] = [1]
+                adjListMap[1] = [key]
+            else:
+                if closestEdge != [] and (closestPoint == closestEdge[0] or closestPoint == closestEdge[1]):
+                    pointCount = pointCount + 1
+                    newPoints[pointCount] = newP
+                    adjListMap[pointCount] = [getPointKey(closestPoint, newPoints)]
+                else:#new pt on the edge
+                    pointCount = pointCount + 1
+                    newPoints[pointCount] = newP
+                    adjListMap[pointCount] = [pointCount+1]
+                    pointCount = pointCount + 1
+                    newPoints[pointCount] = closestPoint
+                    adjListMap[pointCount] = [pointCount - 1] #adj to the new point
+                    pKey = getPointKey(closestEdge[0], newPoints)
+                    qKey = getPointKey(closestEdge[1], newPoints)
+                    adjListMap[pointCount].append(pKey)
+                    adjListMap[pointCount].append(qKey)
+                    adjListMap[pKey].append(pointCount)
+                    adjListMap[qKey].append(pointCount)
+                    try:
+                        adjListMap[pKey].remove(qKey)
+                    except Exception as e:
+                        raise e
+                    try:
+                        adjListMap[qKey].remove(pKey)
+                    except Exception as e:
+                        print("")
+    return newPoints, adjListMap
+
+'''
 returns the key value of a given point
 '''
 def getPointKey(p, points):
@@ -354,8 +417,8 @@ def main(filename, x1, y1, x2, y2, display=''):
     print("The input points are:")
     print(str(points))
     print("")
-    
-    points, adjListMap = growSimpleRRT(points)
+    points, adjListMap = growSimpleRRT(points)#This line was changed to test obstacles method
+    #points, adjListMap = growSimpleRRTwithObstacles(points, obstacles)#This line was changed to test obstacles method
     print("")
     print("The new points are:")
     print(str(points))
