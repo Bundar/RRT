@@ -336,9 +336,9 @@ def isCollisionFree(robot, point, obstacles):
                     X4 = obs[y + 1][0]
                     Y4 = obs[y + 1][1]
                 if (intersect([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]) == True):
-                    return True
+                    return False
     print("COLLIDES")
-    return False
+    return True
 
 '''
 The full RRT algorithm
