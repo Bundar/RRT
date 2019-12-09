@@ -165,68 +165,54 @@ Grow a simple RRT with edge detection with obstacles
 def growSimpleRRTwithObstacles(points, obstacles):
     newPoints = {}
     adjListMap = {}
-    print("POINTS: " + str(points))
-    unaddedpoints = []
-
+    unaddedPoints = []
     pointCount = 1
 
-    for key in points:
-        newP = points[key]
-        if key == 1:
-            print("Adding first")
+    for k in points:
+        nextPoint = points[k]
+
+        if k == 1:#root
             newPoints[1] = points[1]
             adjListMap[1] = []
-        else:
-            minDist = float('inf')
-            closestPoint = [] ## [x, y]
-            closestEdge = [] ## [p, q]
-            print("Adding new point")
-            for sourceNodeKey in adjListMap:
-                print("Source n key: "+str(sourceNodeKey))
-                p = newPoints[sourceNodeKey]
-                for destNodeKey in adjListMap[sourceNodeKey]:
-                    print("dest n key:" + str(destNodeKey))
-                    q = newPoints[destNodeKey]
-                    (qN, dist) = findNearestPointOnEdge(p, q, newP)
-                    print("Qn, Dist: " + str(qN) + ", " + str(dist))
-                    if dist < minDist:
-                        print("Tryin new pt")
-                        edge = [newP, qN]
-                        pointnormalized = [qN[0]-newP[0], qN[1] - newP[1]]
-                        print("Edge: " + str(edge))
-                        if isCollisionFree([(0,0), pointnormalized], newP, obstacles):
-                            print("No Collision")
-                            minDist = dist
-                            closestPoint = qN
-                            closestEdge = [p, q]
+        else:#k>1... check for every edge in tree find the closest one
+            minDistance = float('inf')
+            closestPoint = []
+            edgeUsed = [[],[]]
+            for sk in adjListMap:
+                for dk in adjListMap[sk]:
+                    p = newPoints[sk]
+                    q = newPoints[dk]
+                    (nearestPointOnTree, distance) = findNearestPointOnEdge(p, q, nextPoint)
+                    
+                    if distance < minDistance:
+                        ##check collision
+                        newEdge = [nextPoint, nearestPointOnTree]
+                        if isCollisionFree(newEdge, (0,0), obstacles):
+                            minDistance = distance
+                            closestPoint = nearestPointOnTree
+                            edgeUsed = [p,q]
 
-            
+            if pointCount == 1:
+                newEdge = [nextPoint, newPoints[1]]
+                if isCollisionFree(newEdge, (0,0), obstacles):
+                    minDistance = squaredDist(nextPoint, newPoints[1])
+                    closestPoint = newPoints[1]
+                    edgeUsed = [newPoints[1],newPoints[1]]
 
-            if minDist == float('inf'):
-                pointCount = pointCount + 1 
-                newPoints[key] =  points[key]
-                adjListMap[key] = [1]
-                adjListMap[1] = [key]
-
-            # elif closestPoint == []:
-            # 	print("NO POINT FOUND")
-            # 	unaddedpoints.append(newP)
-            # 	continue
-
-            else:
-                if closestEdge != [] and (closestPoint == closestEdge[0] or closestPoint == closestEdge[1]):
+            if minDistance != float('inf'):
+                if closestPoint == edgeUsed[0] or closestPoint == edgeUsed[1]:
                     pointCount = pointCount + 1
-                    newPoints[pointCount] = newP
+                    newPoints[pointCount] = nextPoint
                     adjListMap[pointCount] = [getPointKey(closestPoint, newPoints)]
                 else:#new pt on the edge
                     pointCount = pointCount + 1
-                    newPoints[pointCount] = newP
+                    newPoints[pointCount] = nextPoint
                     adjListMap[pointCount] = [pointCount+1]
                     pointCount = pointCount + 1
                     newPoints[pointCount] = closestPoint
                     adjListMap[pointCount] = [pointCount - 1] #adj to the new point
-                    pKey = getPointKey(closestEdge[0], newPoints)
-                    qKey = getPointKey(closestEdge[1], newPoints)
+                    pKey = getPointKey(edgeUsed[0], newPoints)
+                    qKey = getPointKey(edgeUsed[1], newPoints)
                     adjListMap[pointCount].append(pKey)
                     adjListMap[pointCount].append(qKey)
                     adjListMap[pKey].append(pointCount)
@@ -239,7 +225,14 @@ def growSimpleRRTwithObstacles(points, obstacles):
                         adjListMap[qKey].remove(pKey)
                     except Exception as e:
                         print("")
-    print("unadded: " + str(unaddedpoints))
+            else:
+                unaddedPoints.append(nextPoint)
+
+
+
+    print("Added Pts: " + str(newPoints))
+    print("\nUnaddedPts: " + str(unaddedPoints))
+
     return newPoints, adjListMap
 
 '''
@@ -286,7 +279,7 @@ Perform basic search
 '''
 def basicSearch(tree, start, goal):
     if len(tree) <= 1:
-	    return
+        return
     visited = [0]*len(tree)
     visited[1] = 1
     return dfs(tree, start, goal, visited)
@@ -311,9 +304,9 @@ def dfs(tree, start, goal, visited):
 Collision checking
 '''
 def isCollisionFree(robot, point, obstacles):
-    print("robot: " + str(robot))
-    print("point: " + str(point))
-    print("obstacles: " + str(obstacles))
+    #print("robot: " + str(robot))
+    #print("point: " + str(point))
+    #print("obstacles: " + str(obstacles))
     #print("testing am here")
     for x in range(0,len(robot)):
         X1 = robot[x][0]+point[0]
@@ -336,9 +329,8 @@ def isCollisionFree(robot, point, obstacles):
                     X4 = obs[y + 1][0]
                     Y4 = obs[y + 1][1]
                 if (intersect([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]) == True):
-                    return True
-    print("COLLIDES")
-    return False
+                    return False
+    return True
 
 '''
 The full RRT algorithm
