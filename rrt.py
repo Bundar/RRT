@@ -340,6 +340,7 @@ def RRT(robot, obstacles, startPoint, goalPoint):
     tree = dict()
     path = []
     points[1] = startPoint
+    points[2] =  goalPoint	
     modobstacles = obstacles[0:len(obstacles)-2]#so as to not include the surrounding area in point calc
     for init in range(0,20):
         x = np.random.ranf()*10 #we are given that the area is from 0 to 10 in a box
@@ -356,10 +357,10 @@ def RRT(robot, obstacles, startPoint, goalPoint):
                 pass
         if (tempPath.contains_point((x, y)) == False):
             points[len(points)+1]= (x,y)
-    goal = len(points)+1
-    points[goal] = goalPoint
+    #goal = len(points)+1
+    #points[goal] = goalPoint
     points, tree = growSimpleRRTwithObstacles(points, obstacles)
-    path = basicSearch(tree, 1, goal)
+    path = basicSearch(tree, 1, 2)
 
 
     # Your code goes here.
