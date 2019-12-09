@@ -66,11 +66,10 @@ def displayRRTandPath(points, adjListMap, path, robotStart=None, robotGoal=None,
         patch = createPolygonPatch(robotGoal, 'red')
         ax.add_patch(patch)    
         for p in range(0, len(polygons)):
-            print("adding patch")
+            #print("adding patch")
             patch = createPolygonPatch(polygons[p], 'gray')
             ax.add_patch(patch)    
     
-    print("Drawing Path Now")
     drawLines(adjListMap, points, _, ax)
     drawpath(path, points, _, ax)
     ax.plot()
@@ -78,11 +77,11 @@ def displayRRTandPath(points, adjListMap, path, robotStart=None, robotGoal=None,
     return
 
 def drawLines(adjMap, vertices, fig, ax):
-    print("vertices: " + str(vertices))
+    #print("vertices: " + str(vertices))
     for v in vertices:
-        print("adjMap["+str(v)+"]: " + str(adjMap[v]))
+        #print("adjMap["+str(v)+"]: " + str(adjMap[v]))
         for label in adjMap[v]:
-            print("line: " + str(v) + " , " + str(label))
+            #print("line: " + str(v) + " , " + str(label))
             newline(vertices[v], vertices[label], 'black')
 
 def newline(p1, p2, c):
@@ -92,10 +91,12 @@ def newline(p1, p2, c):
     ax.add_line(mlines.Line2D(linxs, linys, linewidth=1, color=c))
 
 def drawpath(path, vertices, fig, ax):
+    if path == [] or path == None:
+        return
     curr = path[0]
     for i in range(0,len(path)):
         if i != len(path)-1:
-            print("path line: " + str(vertices[path[i]])+", "+str(vertices[path[i+1]]))
+            #print("path line: " + str(vertices[path[i]])+", "+str(vertices[path[i+1]]))
             newline(vertices[path[i]], vertices[path[i+1]], 'orange')
 
 
@@ -164,35 +165,54 @@ Grow a simple RRT with edge detection with obstacles
 def growSimpleRRTwithObstacles(points, obstacles):
     newPoints = {}
     adjListMap = {}
-    
+    print("POINTS: " + str(points))
+    unaddedpoints = []
+
     pointCount = 1
 
     for key in points:
         newP = points[key]
         if key == 1:
+            print("Adding first")
             newPoints[1] = points[1]
             adjListMap[1] = []
         else:
             minDist = float('inf')
             closestPoint = [] ## [x, y]
             closestEdge = [] ## [p, q]
+            print("Adding new point")
             for sourceNodeKey in adjListMap:
+                print("Source n key: "+str(sourceNodeKey))
                 p = newPoints[sourceNodeKey]
                 for destNodeKey in adjListMap[sourceNodeKey]:
+                    print("dest n key:" + str(destNodeKey))
                     q = newPoints[destNodeKey]
                     (qN, dist) = findNearestPointOnEdge(p, q, newP)
+                    print("Qn, Dist: " + str(qN) + ", " + str(dist))
                     if dist < minDist:
-                    	edge = [newP, qN]
-                    	if isCollisionFree(edge, newP, obstacles):
+                        print("Tryin new pt")
+                        edge = [newP, qN]
+                        pointnormalized = [qN[0]-newP[0], qN[1] - newP[1]]
+                        print("Edge: " + str(edge))
+                        if isCollisionFree([(0,0), pointnormalized], newP, obstacles):
+                            print("No Collision")
                             minDist = dist
                             closestPoint = qN
                             closestEdge = [p, q]
+
+            
 
             if minDist == float('inf'):
                 pointCount = pointCount + 1 
                 newPoints[key] =  points[key]
                 adjListMap[key] = [1]
                 adjListMap[1] = [key]
+
+            # elif closestPoint == []:
+            # 	print("NO POINT FOUND")
+            # 	unaddedpoints.append(newP)
+            # 	continue
+
             else:
                 if closestEdge != [] and (closestPoint == closestEdge[0] or closestPoint == closestEdge[1]):
                     pointCount = pointCount + 1
@@ -219,6 +239,7 @@ def growSimpleRRTwithObstacles(points, obstacles):
                         adjListMap[qKey].remove(pKey)
                     except Exception as e:
                         print("")
+    print("unadded: " + str(unaddedpoints))
     return newPoints, adjListMap
 
 '''
@@ -264,6 +285,8 @@ def findNearestPointOnEdge(p, q, q_rand):
 Perform basic search 
 '''
 def basicSearch(tree, start, goal):
+    if len(tree) <= 1:
+	    return
     visited = [0]*len(tree)
     visited[1] = 1
     return dfs(tree, start, goal, visited)
@@ -275,7 +298,7 @@ def dfs(tree, start, goal, visited):
     if start == goal:
         return [goal]
     if tree[start] == []:
-    	return False
+        return False
     for k in [i for i in tree[start] if visited[i] == 0]:
         visited[k] = 1
         path = dfs(tree, k, goal, visited)
@@ -291,7 +314,7 @@ def isCollisionFree(robot, point, obstacles):
     print("robot: " + str(robot))
     print("point: " + str(point))
     print("obstacles: " + str(obstacles))
-    print("testing am here")
+    #print("testing am here")
     for x in range(0,len(robot)):
         X1 = robot[x][0]+point[0]
         Y1 = robot[x][1]+point[1]
@@ -314,7 +337,7 @@ def isCollisionFree(robot, point, obstacles):
                     Y4 = obs[y + 1][1]
                 if (intersect([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]) == True):
                     return True
-
+    print("COLLIDES")
     return False
 
 '''
@@ -343,7 +366,7 @@ def RRT(robot, obstacles, startPoint, goalPoint):
             points[len(points)+1]= (x,y)
     goal = len(points)+1
     points[goal] = goalPoint
-    points, tree = growSimpleRRT(points)
+    points, tree = growSimpleRRTwithObstacles(points, obstacles)
     path = basicSearch(tree, 1, goal)
 
 
@@ -417,8 +440,7 @@ def main(filename, x1, y1, x2, y2, display=''):
     print("The input points are:")
     print(str(points))
     print("")
-    points, adjListMap = growSimpleRRT(points)#This line was changed to test obstacles method
-    #points, adjListMap = growSimpleRRTwithObstacles(points, obstacles)#This line was changed to test obstacles method
+    points, adjListMap = growSimpleRRT(points)
     print("")
     print("The new points are:")
     print(str(points))
