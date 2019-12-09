@@ -232,8 +232,17 @@ def growSimpleRRTwithObstacles(points, obstacles):
 
     print("Added Pts: " + str(newPoints))
     print("\nUnaddedPts: " + str(unaddedPoints))
-    while len(unaddedPoints) > 0:
-        (newPoints, adjListMap) =addPointToTree(random.choice(unaddedPoints),newPoints, adjListMap,obstacles)
+    
+    retryCount = 10
+    while unaddedPoints and retryCount > 0:
+        pt = random.choice(unaddedPoints)
+        (newPoints1, adjListMap1) = addPointToTree(pt,newPoints, adjListMap,obstacles)
+        newPoints = newPoints1
+        adjListMap = adjListMap1
+        if pt in newPoints:
+            print("Removing pt : " + str(pt))
+            unaddedPoints.remove(pt)
+        retryCount = retryCount - 1
 
     return newPoints, adjListMap
 '''
@@ -286,9 +295,6 @@ def addPointToTree(point, newPoints, adjListMap, obstacles):
                 adjListMap[qKey].remove(pKey)
             except Exception as e:
                 print("")
-    else:
-        unaddedPoints.append(point)
-
     return (newPoints, adjListMap)
 
 '''
