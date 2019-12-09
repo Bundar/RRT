@@ -399,36 +399,75 @@ The full RRT algorithm
 '''
 def RRT(robot, obstacles, startPoint, goalPoint):
     points = dict()
+    points2 = dict()
     tree = dict()
     path = []
     points[1] = startPoint
-    points[2] =  goalPoint	
-    modobstacles = obstacles[0:len(obstacles)-2]#so as to not include the surrounding area in point calc
-    for init in range(0,40):
-        x = np.random.ranf()*10 #we are given that the area is from 0 to 10 in a box
-        y = np.random.ranf()*10
+    points[2] = goalPoint
+    modobstacles = obstacles[0:len(obstacles) - 2]  # so as to not include the surrounding area in point calc
+    for init in range(0, 50):
+        x = np.random.ranf() * 10  # we are given that the area is from 0 to 10 in a box
+        y = np.random.ranf() * 10
         for obstacle in modobstacles:
-            tempArray = np.empty((0,2),float)
-            for obs in range(0,len(obstacle)):
-                    tempArray = np.append(tempArray, np.array([obstacle[obs]]),axis = 0)
+            tempArray = np.empty((0, 2), float)
+            for obs in range(0, len(obstacle)):
+                tempArray = np.append(tempArray, np.array([obstacle[obs]]), axis=0)
             tempArray = np.append(tempArray, np.array([obstacle[0]]), axis=0)
             tempPath = mpPath.Path(tempArray)
-            if(tempPath.contains_point((x,y))):
+            if (tempPath.contains_point((x, y))):
                 break
             else:
                 pass
         if (tempPath.contains_point((x, y)) == False):
-            points[len(points)+1]= (x,y)
-    #goal = len(points)+1
-    #points[goal] = goalPoint
-    points, tree = growSimpleRRTwithObstacles(points, obstacles)
+            points[len(points) + 1] = (x, y)
+    # goal = len(points)+1
+    # points[goal] = goalPoint
+    points2, tree = growSimpleRRTwithObstacles(points, obstacles)
+
+    if dictsearch(goalPoint,points2) == 0:
+        path = []
+    else:
+        path = basicSearch(tree, 1, dictsearch(goalPoint, points2))
+    if dictsearch(goalPoint,points) == 0:
+        points[len(points) + 1] = goalPoint
+    while path == [] and len(points )<100:
+        for init in range(0, 10):
+            x = np.random.ranf() * 10  # we are given that the area is from 0 to 10 in a box
+            y = np.random.ranf() * 10
+            for obstacle in modobstacles:
+                tempArray = np.empty((0, 2), float)
+                for obs in range(0, len(obstacle)):
+                    tempArray = np.append(tempArray, np.array([obstacle[obs]]), axis=0)
+                tempArray = np.append(tempArray, np.array([obstacle[0]]), axis=0)
+                tempPath = mpPath.Path(tempArray)
+                if (tempPath.contains_point((x, y))):
+                    break
+                else:
+                    pass
+            if (tempPath.contains_point((x, y)) == False):
+                points[len(points) + 1] = (x, y)
+        if dictsearch(goalPoint, points)==False:
+            points[len(points) + 1] = (x, y)
+        points2, tree = growSimpleRRTwithObstacles(points, obstacles)
+        if dictsearch(goalPoint, points2)==0:
+            path = []
+
+        else:
+            pass
+            path = basicSearch(tree, 1, 2)
+        points[len(points) + 1] = goalPoint
+    points2, tree = growSimpleRRTwithObstacles(points, obstacles)
     path = basicSearch(tree, 1, 2)
 
+    return points2, tree, path
 
-    # Your code goes here.
-    
+def dictsearch(val, dict):
+    for items in dict:
+        if val ==dict[items]:
+            return items
+    return 0
+
     return points, tree, path
-
 def ccw(A,B,C):
     return ((C[1]-A[1])) * (B[0]-A[0]) > ((B[1]-A[1]) * (C[0]-A[0]))
 
