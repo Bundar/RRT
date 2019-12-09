@@ -307,11 +307,11 @@ def isCollisionFree(robot, point, obstacles):
                 X3 = obs[y][0]
                 Y3 = obs[y][1]
                 if (y == len(obs) - 1):
-                    X4 = robot[0][0]
-                    Y4 = robot[0][1]
+                    X4 = obs[0][0]
+                    Y4 = obs[0][1]
                 else:
-                    X4 = robot[y + 1][0]
-                    Y4 = robot[y + 1][1]
+                    X4 = obs[y + 1][0]
+                    Y4 = obs[y + 1][1]
                 if (intersect([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]) == True):
                     return True
 
