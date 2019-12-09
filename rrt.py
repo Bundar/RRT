@@ -232,8 +232,61 @@ def growSimpleRRTwithObstacles(points, obstacles):
 
     print("Added Pts: " + str(newPoints))
     print("\nUnaddedPts: " + str(unaddedPoints))
+    for p in unaddedPoints:
+        addPointToTree(p,newPoints, adjListMap,obstacles)
 
     return newPoints, adjListMap
+'''
+expand tree function to add point to the tree if possible
+'''
+def addPointToTree(point, newPoints, adjListMap, obstacles):
+    pointCount = len(adjListMap)
+    unaddedPoints = []
+
+    minDistance = float('inf')
+    closestPoint = []
+    edgeUsed = [[],[]]
+    for sk in adjListMap:
+        for dk in adjListMap[sk]:
+            p = newPoints[sk]
+            q = newPoints[dk]
+            (nearestPointOnTree, distance) = findNearestPointOnEdge(p, q, point)
+            
+            if distance < minDistance:
+                ##check collision
+                newEdge = [point, nearestPointOnTree]
+                if isCollisionFree(newEdge, (0,0), obstacles):
+                    minDistance = distance
+                    closestPoint = nearestPointOnTree
+                    edgeUsed = [p,q]
+    if minDistance != float('inf'):
+        if closestPoint == edgeUsed[0] or closestPoint == edgeUsed[1]:
+            pointCount = pointCount + 1
+            newPoints[pointCount] = point
+            adjListMap[pointCount] = [getPointKey(closestPoint, newPoints)]
+        else:#new pt on the edge
+            pointCount = pointCount + 1
+            newPoints[pointCount] = point
+            adjListMap[pointCount] = [pointCount+1]
+            pointCount = pointCount + 1
+            newPoints[pointCount] = closestPoint
+            adjListMap[pointCount] = [pointCount - 1] #adj to the new point
+            pKey = getPointKey(edgeUsed[0], newPoints)
+            qKey = getPointKey(edgeUsed[1], newPoints)
+            adjListMap[pointCount].append(pKey)
+            adjListMap[pointCount].append(qKey)
+            adjListMap[pKey].append(pointCount)
+            adjListMap[qKey].append(pointCount)
+            try:
+                adjListMap[pKey].remove(qKey)
+            except Exception as e:
+                raise e
+            try:
+                adjListMap[qKey].remove(pKey)
+            except Exception as e:
+                print("")
+    else:
+        unaddedPoints.append(point)
 
 '''
 returns the key value of a given point
@@ -279,7 +332,7 @@ Perform basic search
 '''
 def basicSearch(tree, start, goal):
     if len(tree) <= 1:
-        return
+        return []
     visited = [0]*len(tree)
     visited[1] = 1
     return dfs(tree, start, goal, visited)
@@ -290,8 +343,8 @@ recursive dfs helper
 def dfs(tree, start, goal, visited):
     if start == goal:
         return [goal]
-    if tree[start] == []:
-        return False
+    if tree[start] == [] or tree[start] == None:
+        return []
     for k in [i for i in tree[start] if visited[i] == 0]:
         visited[k] = 1
         path = dfs(tree, k, goal, visited)
