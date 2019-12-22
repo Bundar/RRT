@@ -5,7 +5,7 @@ import matplotlib.path as mpPath
 import matplotlib.patches as patches
 import numpy as np
 import matplotlib.lines as mlines
-
+import math
 
 '''
 Set up matplotlib to create a plot with an empty square
@@ -365,11 +365,41 @@ def dfs(tree, start, goal, visited):
 '''
 Collision checking
 '''
+# def isCollisionFree(robot, point, obstacles):
+#     print("robot: " + str(robot))
+#     print("point: " + str(point))
+#     print("obstacles: " + str(obstacles))
+#     for x in range(0,len(robot)):
+#         X1 = robot[x][0]+point[0]
+#         Y1 = robot[x][1]+point[1]
+#         if(x == len(robot)-1):
+#             X2 = robot[0][0]+point[0]
+#             Y2 = robot[0][1]+point[1]
+#         else:
+#             X2 = robot[x+1][0]+point[0]
+#             Y2 = robot[x+1][1]+point[1]
+
+#         for obs in obstacles:
+#             for y in range(0,len(obs)):
+#                 X3 = obs[y][0]
+#                 Y3 = obs[y][1]
+#                 if (y == len(obs) - 1):
+#                     X4 = obs[0][0]
+#                     Y4 = obs[0][1]
+#                 else:
+#                     X4 = obs[y + 1][0]
+#                     Y4 = obs[y + 1][1]
+#                 if (intersectLines([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]) == True):
+#                     return False
+#     return True
+
+'''
+Collision checking
+'''
 def isCollisionFree(robot, point, obstacles):
-    #print("robot: " + str(robot))
-    #print("point: " + str(point))
-    #print("obstacles: " + str(obstacles))
-    #print("testing am here")
+    print("robot: " + str(robot))
+    print("point: " + str(point))
+    print("obstacles: " + str(obstacles))
     for x in range(0,len(robot)):
         X1 = robot[x][0]+point[0]
         Y1 = robot[x][1]+point[1]
@@ -379,7 +409,8 @@ def isCollisionFree(robot, point, obstacles):
         else:
             X2 = robot[x+1][0]+point[0]
             Y2 = robot[x+1][1]+point[1]
-
+        # print("X1, Y1 = ", X1, ", ", Y1)
+        # print("X2, Y2 = ", X2, ", ", Y2,"\n")
         for obs in obstacles:
             for y in range(0,len(obs)):
                 X3 = obs[y][0]
@@ -390,9 +421,36 @@ def isCollisionFree(robot, point, obstacles):
                 else:
                     X4 = obs[y + 1][0]
                     Y4 = obs[y + 1][1]
-                if (intersect([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]) == True):
+
+                # print("X3, Y3 = ", X3, ", ", Y3)
+                # print("X4, Y4 = ", X4, ", ", Y4)
+                if intersectLines([X1,Y1], [X2,Y2], [X3, Y3], [X4, Y4]):
+                    # print("Intersection found")
                     return False
     return True
+
+def intersectLines( pt1, pt2, ptA, ptB ): 
+    DET_TOLERANCE = 0.00001
+    x1, y1 = pt1;   x2, y2 = pt2
+    dx1 = x2 - x1;  dy1 = y2 - y1
+    x, y = ptA;   xB, yB = ptB;
+    dx = xB - x;  dy = yB - y;
+    # print("Stuff")
+    DET = (-dx1 * dy + dy1 * dx)
+
+    if math.fabs(DET) < DET_TOLERANCE: 
+    	return False
+    DETinv = 1.0/DET
+    r = DETinv * (-dy  * (x-x1) +  dx * (y-y1))
+    s = DETinv * (-dy1 * (x-x1) + dx1 * (y-y1))
+    xi = (x1 + r*dx1 + x + s*dx)/2.0
+    yi = (y1 + r*dy1 + y + s*dy)/2.0
+    # print("Intersection: ",xi,",",yi)
+    if xi <= max(x1, x2) and xi >= min(x1, x2) and yi <= max(y1, y2) and yi >= min(y1, y2):
+        if xi <= max(x, xB) and xi >= min(x, xB) and yi <= max(y, yB) and yi >= min(y, yB):
+            print("Intersection at: ", xi, ", ", yi)
+            return True
+    return False
 
 '''
 The full RRT algorithm
